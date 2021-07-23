@@ -4,7 +4,10 @@
     "description": "Shake on hurt",
     "version": "0.1",
     "author": "Vauryx",
-    "scripts": ["./scripts/Shake.js"],
+    "scripts": [
+                "./scripts/Config.js"
+                ,"./scripts/Shake.js"
+                ],
     "minimumCoreVersion": "0.8.6",
     "compatibleCoreVersion": "0.8.8",
     "dependencies": [

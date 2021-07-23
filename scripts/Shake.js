@@ -1,26 +1,27 @@
-function HurtShake(shakeDelay)
+function HurtShake(shakeDelay, bloodOnHurt)
 {
   console.log("Hurt Shaking");
+  let bloodEffect = 
+  {
+    filterType: "splash",
+    filterId: "wound",
+    rank:5,
+    color: 0x990505,
+    padding: 80,
+    time: Math.random()*1000,
+    seed: Math.random(),
+    splashFactor: 1,
+    spread: 0.5,
+    blend: 1,
+    dimX: 1,
+    dimY: 1,
+    cut: false,
+    textureAlphaBlend: true,
+    anchorX: 0.32+(Math.random()*0.36),
+    anchorY: 0.32+(Math.random()*0.36)
+  }
   let hurtEffect =
   [{
-      filterType: "splash",
-      filterId: "wound",
-      rank:5,
-      color: 0x990505,
-      padding: 80,
-      time: Math.random()*1000,
-      seed: Math.random(),
-      splashFactor: 1,
-      spread: 0.5,
-      blend: 1,
-      dimX: 1,
-      dimY: 1,
-      cut: false,
-      textureAlphaBlend: true,
-      anchorX: 0.32+(Math.random()*0.36),
-      anchorY: 0.32+(Math.random()*0.36)
-  },
-  {
       filterType: "transform",
       filterId: "hurtShake",
       autoDestroy: true,
@@ -37,14 +38,19 @@ function HurtShake(shakeDelay)
           }
       }
   }];
+  if (bloodOnHurt)
+  {
+    hurtEffect.push(bloodEffect);
+  }
   setTimeout(function(){
     TokenMagic.addFiltersOnTargeted(hurtEffect);
   },shakeDelay);
 }
-function DeathShake(shakeDelay)
+
+function DeathShake(shakeDelay, bloodOnDeath)
 {
   console.log("Death Shaking");
-  let hurtEffect =
+  let deathEffect =
   [{
       filterType: "transform",
       filterId: "hurtShake",
@@ -57,12 +63,12 @@ function DeathShake(shakeDelay)
               animType: "cosOscillation",
               val1: 0,
               val2: -0.05,
-              loops: 2,
+              loops: 4,
               loopDuration: 150
           }
       }
   }];
-  let deathEffect =
+  let bloodEffect =
   [{
       filterType: "splash",
       filterId: "death",
@@ -79,10 +85,14 @@ function DeathShake(shakeDelay)
       textureAlphaBlend: false
   }];
   setTimeout(function(){
-    TokenMagic.addFiltersOnTargeted(hurtEffect);
-    setTimeout(function(){
-      TokenMagic.addFiltersOnTargeted(deathEffect, true);
-    },400);
+    TokenMagic.addFiltersOnTargeted(deathEffect);
+    if(bloodOnDeath)
+    {
+      setTimeout(function(){
+        TokenMagic.addFiltersOnTargeted(bloodEffect, true);
+      },400);
+    }
+    
   },shakeDelay);
 
 }
@@ -91,16 +101,25 @@ Hooks.on("midi-qol.RollComplete", function(data){
   console.log("Targets hit: " + (data.hitTargets.size ?? 0));
   if(data.hitTargets.size > 0)
   {
+    let defaultDelay = game.settings.get("shake","defaultShakeDelay");
+    let bloodOnHurt = game.settings.get("shake","bloodOnHurt");
+    let bloodOnDeath = game.settings.get("shake","bloodOnDeath");
     let hpDamage = data.damageList[0].hpDamage;
     let newHP = data.damageList[0].newHP;
-    let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay") ?? "";
+    let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay");
+    console.log("bloodOnHurt: " + bloodOnHurt);
+    console.log("bloodOnDeath: " + bloodOnDeath);
+    if (shakeDelay == "")
+    {
+      shakeDelay = defaultDelay;
+    }
     if (hpDamage > 0 && newHP > 0)
     {
-      HurtShake(shakeDelay);
+      HurtShake(shakeDelay, bloodOnHurt);
     }
     else if (hpDamage > 0 && newHP <= 0)
     {
-      DeathShake(shakeDelay);
+      DeathShake(shakeDelay, bloodOnDeath);
     }
   }
 });
