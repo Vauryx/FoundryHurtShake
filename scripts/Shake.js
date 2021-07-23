@@ -1,5 +1,6 @@
-function Shake()
+function HurtShake(shakeDelay)
 {
+  console.log("Hurt Shaking");
   let hurtEffect =
   [{
       filterType: "splash",
@@ -36,21 +37,68 @@ function Shake()
           }
       }
   }];
-  TokenMagic.addFiltersOnTargeted(hurtEffect);
+  setTimeout(function(){
+    TokenMagic.addFiltersOnTargeted(hurtEffect);
+  },shakeDelay);
+}
+function DeathShake(shakeDelay)
+{
+  console.log("Death Shaking");
+  let hurtEffect =
+  [{
+      filterType: "transform",
+      filterId: "hurtShake",
+      autoDestroy: true,
+      padding: 80,
+      animated:
+      {
+          translationX:
+          {
+              animType: "cosOscillation",
+              val1: 0,
+              val2: -0.05,
+              loops: 2,
+              loopDuration: 150
+          }
+      }
+  }];
+  let deathEffect =
+  [{
+      filterType: "splash",
+      filterId: "death",
+      color: 0x900505,
+      padding: 30,
+      time: Math.random()*1000,
+      seed: Math.random()/100,
+      splashFactor: 2,
+      spread: 7,
+      blend: 1,
+      dimX: 1,
+      dimY: 1,
+      cut: true,
+      textureAlphaBlend: false
+  }];
+  setTimeout(function(){
+    TokenMagic.addFiltersOnTargeted(hurtEffect);
+    setTimeout(function(){
+      TokenMagic.addFiltersOnTargeted(deathEffect, true);
+    },400);
+  },shakeDelay);
+
 }
 
 Hooks.on("midi-qol.RollComplete", function(data){
   let hpDamage = data.damageList[0].hpDamage;
+  let newHP = data.damageList[0].newHP;
   let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay");
-  console.log("CAUGHT MIDI ROLL COMPLETE HOOK!");
-  console.log("MIDI hpDamage: - " + hpDamage);
-  console.log("DELAY DETECTED: - " + shakeDelay);
-  setTimeout(function(){
-    if (hpDamage > 0)
-    {
-      Shake();
-    }
-  }, shakeDelay);
+  if (hpDamage > 0 && newHP > 0)
+  {
+    HurtShake(shakeDelay);
+  }
+  else if (hpDamage > 0 && newHP <= 0)
+  {
+    DeathShake(shakeDelay);
+  }
 });
 
 Hooks.on("renderItemSheet", (app, html, data) => {
