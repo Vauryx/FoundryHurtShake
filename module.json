@@ -1,22 +1,18 @@
 {
     "name": "shake",
     "title": "Shake",
-    "description": "Shake up your games",
+    "description": "Shake on hurt",
     "version": "0.1",
     "author": "Vauryx",
     "scripts": ["./scripts/Shake.js"],
     "minimumCoreVersion": "0.8.6",
     "compatibleCoreVersion": "0.8.8",
-    "socket": true,
     "dependencies": [
         {
-            "name": "socketlib"
+            "name": "midi-qol"
         },
         {
-            "name": "colorsettings"
-        },
-        {
-            "name": "lib-wrapper"
+            "name": "tokenmagic"
         }
     ]
 }
