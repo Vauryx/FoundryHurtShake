@@ -88,16 +88,20 @@ function DeathShake(shakeDelay)
 }
 
 Hooks.on("midi-qol.RollComplete", function(data){
-  let hpDamage = data.damageList[0].hpDamage;
-  let newHP = data.damageList[0].newHP;
-  let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay");
-  if (hpDamage > 0 && newHP > 0)
+  console.log("Targets hit: " + (data.hitTargets.size ?? 0));
+  if(data.hitTargets.size > 0)
   {
-    HurtShake(shakeDelay);
-  }
-  else if (hpDamage > 0 && newHP <= 0)
-  {
-    DeathShake(shakeDelay);
+    let hpDamage = data.damageList[0].hpDamage;
+    let newHP = data.damageList[0].newHP;
+    let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay") ?? "";
+    if (hpDamage > 0 && newHP > 0)
+    {
+      HurtShake(shakeDelay);
+    }
+    else if (hpDamage > 0 && newHP <= 0)
+    {
+      DeathShake(shakeDelay);
+    }
   }
 });
 
