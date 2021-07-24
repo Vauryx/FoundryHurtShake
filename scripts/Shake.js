@@ -1,4 +1,4 @@
-function HurtShake(shakeDelay, bloodOnHurt)
+function HurtShake(shakeDelay, bloodOnHurt, woundSize, shakeLoops, shakeLoopDuration)
 {
   console.log("Hurt Shaking");
   let bloodEffect = 
@@ -11,7 +11,7 @@ function HurtShake(shakeDelay, bloodOnHurt)
     time: Math.random()*1000,
     seed: Math.random(),
     splashFactor: 1,
-    spread: 0.5,
+    spread: woundSize,
     blend: 1,
     dimX: 1,
     dimY: 1,
@@ -33,8 +33,8 @@ function HurtShake(shakeDelay, bloodOnHurt)
               animType: "cosOscillation",
               val1: 0,
               val2: -0.05,
-              loops: 2,
-              loopDuration: 150
+              loops: shakeLoops,
+              loopDuration: shakeLoopDuration
           }
       }
   }];
@@ -47,7 +47,7 @@ function HurtShake(shakeDelay, bloodOnHurt)
   },shakeDelay);
 }
 
-function DeathShake(shakeDelay, bloodOnDeath)
+function DeathShake(shakeDelay, bloodOnDeath, shakeLoops, shakeLoopDuration, bloodEffectDelay)
 {
   console.log("Death Shaking");
   let deathEffect =
@@ -63,8 +63,8 @@ function DeathShake(shakeDelay, bloodOnDeath)
               animType: "cosOscillation",
               val1: 0,
               val2: -0.05,
-              loops: 4,
-              loopDuration: 150
+              loops: shakeLoops,
+              loopDuration: shakeLoopDuration
           }
       }
   }];
@@ -90,36 +90,43 @@ function DeathShake(shakeDelay, bloodOnDeath)
     {
       setTimeout(function(){
         TokenMagic.addFiltersOnTargeted(bloodEffect, true);
-      },400);
+      },bloodEffectDelay);
     }
     
   },shakeDelay);
-
 }
 
 Hooks.on("midi-qol.RollComplete", function(data){
-  console.log("Targets hit: " + (data.hitTargets.size ?? 0));
   if(data.hitTargets.size > 0)
   {
     let defaultDelay = game.settings.get("shake","defaultShakeDelay");
     let bloodOnHurt = game.settings.get("shake","bloodOnHurt");
     let bloodOnDeath = game.settings.get("shake","bloodOnDeath");
+    let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay");
+    let hurtShakeLoops = game.settings.get("shake","hurtShakeLoops");
+    let hurtShakeLoopTime = game.settings.get("shake","hurtShakeLoopTime");
+    let deathShakeLoops = game.settings.get("shake","deathShakeLoops");
+    let deathShakeLoopTime = game.settings.get("shake","deathShakeLoopTime");
+    let bloodEffectDelay = game.settings.get("shake","deathBloodDelay");
+
     let hpDamage = data.damageList[0].hpDamage;
     let newHP = data.damageList[0].newHP;
-    let shakeDelay = getProperty(data.item, "data.flags.shake.shakeDelay");
-    console.log("bloodOnHurt: " + bloodOnHurt);
-    console.log("bloodOnDeath: " + bloodOnDeath);
+    let targetMaxHP = [...data.hitTargets][0].document._actor.data.data.attributes.hp.max;
+    let damageTotal = data.damageTotal;
+    let HpLost = (damageTotal/targetMaxHP) * 100;
+    let woundSize = Math.abs((0.02*HpLost) + 0.4);
+
     if (shakeDelay == "")
     {
       shakeDelay = defaultDelay;
     }
     if (hpDamage > 0 && newHP > 0)
     {
-      HurtShake(shakeDelay, bloodOnHurt);
+      HurtShake(shakeDelay, bloodOnHurt, woundSize, hurtShakeLoops, hurtShakeLoopTime);
     }
     else if (hpDamage > 0 && newHP <= 0)
     {
-      DeathShake(shakeDelay, bloodOnDeath);
+      DeathShake(shakeDelay, bloodOnDeath, deathShakeLoops, deathShakeLoopTime, bloodEffectDelay);
     }
   }
 });
