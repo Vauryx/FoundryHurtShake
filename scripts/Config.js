@@ -1,5 +1,5 @@
 Hooks.on("init", function() {   
-    console.log("Trying to register game setting...");
+    console.log("Trying to register TargetReacts game settings...");
     game.settings.register("shake", "defaultShakeDelay", {  
         name: "Default Shake Delay",                  
         hint: "Set default delay for hurt shake",               
